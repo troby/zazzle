@@ -1,0 +1,8 @@
+Module for integration with Zazzle.com REST API
+
+These methods allow for interfacing with the REST API provided by
+Zazzle.com for their customers. It is designed as the back-end piece
+to a web-based Order Management System. The construction of these
+methods as well as the suggested error handling followed came from
+the document provided by: 'Zazzle Vendor API Documentation v1.12.pdf'.
+
