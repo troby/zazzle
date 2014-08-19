@@ -6,7 +6,7 @@ use XML::Simple qw(xml_in);
 use DBI;
 
 # Test 1: object initialization
-my $obj = Zazzle::API->new('path', 'user', 'secret');
+my $obj = Zazzle::API->new('user', 'secret');
 print "ok 1\n";
 
 # Test 2: test md5_hex
