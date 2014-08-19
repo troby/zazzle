@@ -1,6 +1,25 @@
 ----------------------------
+revision 1.40
+date: 2014/08/14 18:08:23;  author: ted;  state: Exp;
+Major revamp of Zazzle:
+        Move Zazzle.pm to lib/Zazzle/API.pm
+        Add lib/Zazzle/DB.pm
+        update MANIFEST, Makefile.PL and test.pl
+	create/update relevant documentation
+----------------------------
+revision 1.32
+date: 2014/08/13 15:44:39;  author: ted;  state: Exp;  lines: +3 -3
+call xmltoh() as class method, typecast data element as array in join(), and do not use scalar workaround for xml_in() options
+----------------------------
+revision 1.31
+date: 2014/08/13 15:18:34;  author: ted;  state: Exp;  lines: +19 -1
+xmltoh():
+        This method converts returned xml data into a hash reference
+        using XML::Simple to do the heavy lifting. Add a test for
+        XML::Simple->xml_in() and document $zaz->{'href'} in pod.
+----------------------------
 revision 1.30
-date 2014/08/11 10:45:00;   author: ted;
+date: 2014/08/11 17:45:43;  author: ted;  state: Exp;  lines: +38 -2
 Switch to BSD style license and add license() method.
 ----------------------------
 revision 1.29

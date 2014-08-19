@@ -1,10 +1,12 @@
-use Zazzle;
+use Zazzle::API;
 use Digest::MD5 qw(md5_hex);
 use IPC::Open2 qw(open2);
 use URI::Escape qw(uri_escape);
+use XML::Simple qw(xml_in);
+use DBI;
 
 # Test 1: object initialization
-my $obj = Zazzle->new('path', 'user', 'secret');
+my $obj = Zazzle::API->new('path', 'user', 'secret');
 print "ok 1\n";
 
 # Test 2: test md5_hex
@@ -38,4 +40,13 @@ if (uri_escape($plain) eq $coded) {
 	print "ok 4\n";
 } else {
 	print "fail 4\n";
+}
+
+# Test 5: test xml_in
+my $xml = '<xml><cat><status>Success</status></cat></xml>';
+my $hr = xml_in($xml, ForceArray => ['cat']);
+if ($hr->{'cat'}->[0]->{'status'} eq 'Success') {
+	print "ok 5\n";
+} else {
+	print "fail 5\n";
 }

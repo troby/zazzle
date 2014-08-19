@@ -1,14 +1,15 @@
-package Zazzle;
+package Zazzle::API;
 use warnings;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = '1.30';
+$VERSION = '1.40';
 
 # dependencies
 use Digest::MD5 qw(md5_hex);
 use IPC::Open2 qw(open2);
 use URI::Escape qw(uri_escape);
+use XML::Simple qw(xml_in);
 use File::Which;
 
 sub new {
@@ -26,6 +27,7 @@ sub new {
 	    'secret'  => $key,
 	    'curl'    => $curl . q( -k -H 'Content-Type: text/xml'),
 	    'data'    => [],
+	    'href'    => {},
 	};
 	bless $session, $package;
 	return $session;
@@ -38,6 +40,7 @@ sub fetch {
 	    die q($self->{'url'} undefined);
 	}
 	$self->{'data'} = [];
+	$self->{'href'} = {};
 	my $pid = open2(\*READ,
 	    undef,
 	    "$self->{'curl'} '$self->{'url'}' 2>/dev/null");
@@ -45,6 +48,7 @@ sub fetch {
 	close READ;
 	waitpid($pid, 0);
 	$self->{'data'} = \@resp;
+	$self->xmltoh();
 	unless ($self->validate()) {
 	    warn q(ERROR: dumping contents of $self->{'data'});
 	    warn q($self->{'url'}: ) . $self->{'url'};
@@ -200,8 +204,21 @@ sub getorder {
 	$self->fetch();
 }
 
+sub xmltoh {
+	# parse xml data to hash ref and store in href element
+	my $self = shift;
+	$self->{'href'} = xml_in(join('', @{$self->{'data'}}),
+	    SuppressEmpty => undef,
+	    ForceArray => ['Order', 'LineItem', 'Product',
+		'Message', 'ShippingDocument'],
+	    GroupTags => {'Products' => 'Product', 'Orders' => 'Order',
+		'LineItems' => 'LineItem', 'Result' => 'Orders',
+		'Messages' => 'Message', 'PackingSheet' => 'Page',
+		'ShippingDocuments' => 'ShippingDocument'});
+}
+
 sub license {
-print <<"EOF"
+my $lic = q|
 #########################################################################
 # Copyright (c) 2014, Ted Roby (ted at sranet dot com)                  #
 # All rights reserved.                                                  #
@@ -231,7 +248,8 @@ print <<"EOF"
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,     #
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                    #
 #########################################################################
-EOF
+|;
+return $lic;
 }
 
 1;
@@ -248,9 +266,9 @@ Zazzle REST API Order Integration
 
 =over 4
 
-=item use Zazzle
+=item use Zazzle::API
 
-=item my $zaz = Zazzle->new($id, $key)
+=item my $zaz = Zazzle::API->new($id, $key)
 
 Initialize new object with VendorID, and Secret Key.
 
@@ -266,6 +284,13 @@ and order data retrieval concerning all methods documented below.
 
 Commonly, you will reference this element as: @{$zaz->{'data'}}
 where you can then parse the xml data within line by line.
+
+=item $zaz->{'href'}
+
+When xml data returned from Zazzle is stored, it is also parsed
+into a hash reference using XML::Simple. This hash reference is
+then stored here. The ForceArray option is used for a few, select
+tags like <Orders>, which should be treated as a list.
 
 =item $zaz->listneworders()
 
@@ -324,7 +349,7 @@ Fetch order data for the specified orderID.
 =head1 COPYRIGHT
 
     All rights reserved. Released under BSD-Style license.
-    See license() for more information.
+    See Zazzle::API->license() for more information.
 
 =cut
 
