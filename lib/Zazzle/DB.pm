@@ -10,7 +10,7 @@ sub add {
 	unless ($data->{'Status'}->{'Code'} eq 'SUCCESS') {
 	    die "Invalid API Response";
 	}
-	# empty Result will look like HASH instead of ARRAY
+	# empty Result will be undefined
 	unless ($data->{'Result'}) {
 	    return 0;
 	}
@@ -70,7 +70,6 @@ sub order_exists {
 	$sth->finish();
 	$dbh->disconnect();
 	if ($rh) {
-	    print "$rh->{'orderid'} already exists.\n";
 	    return 1;
 	} else {
 	    return 0;
