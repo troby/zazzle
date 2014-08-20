@@ -72,6 +72,9 @@ sub validate {
 		last;
 	    }
 	}
+	# no need for second test if first failed
+	return 0 if ($test == 0);
+	$test = 0;
 	# returned data should end with closing Response tag
 	if ($ary[-1] =~ m:</Response>$:) {
 	    $test = 1;
