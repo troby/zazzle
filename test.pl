@@ -1,4 +1,4 @@
-use Zazzle::API;
+use WebServices::Zazzle;
 use Digest::MD5 qw(md5_hex);
 use IPC::Open2 qw(open2);
 use URI::Escape qw(uri_escape);
@@ -6,7 +6,7 @@ use XML::Simple qw(xml_in);
 use DBI;
 
 # Test 1: object initialization
-my $obj = Zazzle::API->new('user', 'secret');
+my $obj = WebServices::Zazzle->new('user', 'secret');
 print "ok 1\n";
 
 # Test 2: test md5_hex

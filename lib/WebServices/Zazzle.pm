@@ -1,9 +1,9 @@
-package Zazzle::API;
+package WebServices::Zazzle;
 use warnings;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = '1.40';
+$VERSION = '1.41';
 
 # dependencies
 use Digest::MD5 qw(md5_hex);
@@ -269,9 +269,9 @@ Zazzle REST API Order Integration
 
 =over 4
 
-=item use Zazzle::API
+=item use WebServices::Zazzle
 
-=item my $zaz = Zazzle::API->new($id, $key)
+=item my $zaz = WebServices::Zazzle->new($id, $key)
 
 Initialize new object with VendorID, and Secret Key.
 
@@ -352,7 +352,7 @@ Fetch order data for the specified orderID.
 =head1 COPYRIGHT
 
     All rights reserved. Released under BSD-Style license.
-    See Zazzle::API->license() for more information.
+    See WebServices::Zazzle->license() for more information.
 
 =cut
 

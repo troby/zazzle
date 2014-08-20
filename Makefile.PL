@@ -1,8 +1,8 @@
 use ExtUtils::MakeMaker;
 
 WriteMakefile(
-	'NAME'    => 'Zazzle',
-	'VERSION_FROM' => 'lib/Zazzle/API.pm',
+	'NAME'    => 'WebServices::Zazzle',
+	'VERSION_FROM' => 'lib/WebServices/Zazzle.pm',
 	'PREREQ_PM' => {
 	    "Digest::MD5"=>0,
 	    "IPC::Open2"=>0,

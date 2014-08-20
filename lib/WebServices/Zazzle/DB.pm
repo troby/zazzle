@@ -1,4 +1,4 @@
-package Zazzle::DB;
+package WebServices::Zazzle::DB;
 use warnings;
 use strict;
 use DBI;
@@ -123,9 +123,9 @@ Zazzle DBI Integration
 
 =over 4
 
-=item use Zazzle::DB
+=item use WebServices::Zazzle::DB
 
-=item Zazzle::DB::add($zaz->{'href'});
+=item WebServices::Zazzle::DB::add($zaz->{'href'});
 
 Parse data in $zaz->{'href'} and insert into mysql database.
 Return -1 if mysql INSERT fails, or return number of times
