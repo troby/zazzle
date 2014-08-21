@@ -212,12 +212,13 @@ sub xmltoh {
 	my $self = shift;
 	$self->{'href'} = xml_in(join('', @{$self->{'data'}}),
 	    SuppressEmpty => undef,
-	    ForceArray => ['Order', 'LineItem', 'Product',
-		'Message', 'ShippingDocument'],
+	    ForceArray => ['Order', 'LineItem', 'Product', 'Message',
+		'ShippingDocument', 'PrintFile', 'PreviewFile'],
 	    GroupTags => {'Products' => 'Product', 'Orders' => 'Order',
 		'LineItems' => 'LineItem', 'Result' => 'Orders',
 		'Messages' => 'Message', 'PackingSheet' => 'Page',
-		'ShippingDocuments' => 'ShippingDocument'});
+		'ShippingDocuments' => 'ShippingDocument',
+		'PrintFiles' => 'PrintFile', 'Previews' => 'PreviewFile'});
 }
 
 sub license {
