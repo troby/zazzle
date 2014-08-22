@@ -3,6 +3,5 @@ LICENSE
 MANIFEST
 Makefile.PL
 README
-lib/WebServices/Zazzle/DB.pm
 lib/WebServices/Zazzle.pm
 test.pl

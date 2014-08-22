@@ -9,6 +9,5 @@ WriteMakefile(
 	    "File::Which"=>0,
 	    "URI::Escape"=>0,
 	    "XML::Simple"=>0,
-	    "DBI"=>0,
 	},
 );
