@@ -3,7 +3,7 @@ use warnings;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = '1.41';
+$VERSION = '1.42';
 
 # dependencies
 use Digest::MD5 qw(md5_hex);
@@ -82,7 +82,7 @@ sub validate {
 	return $test;
 }
 
-sub listneworders {
+sub list_new_orders {
 	my $self = shift;
         my $hash = md5_hex($self->{'id'}, $self->{'secret'});
 	$self->{'url'}  = "$self->{'baseurl'}method=listneworders";
@@ -90,7 +90,7 @@ sub listneworders {
 	$self->fetch();
 }
 
-sub getshippinglabel {
+sub get_shipping_label {
 	my ($self, $orderid, $weight, $format) = @_;
 	die "no orderid specified" unless ($orderid);
 	die "no order weight specified" unless ($weight);
@@ -110,9 +110,9 @@ sub getshippinglabel {
 	$self->fetch();
 }
 
-sub ackorder {
+sub ack_order {
 	my ($self, $orderid, $type, $action) = @_;
-	# die if ackorder was called directly without wrapper
+	# die if ack_order was called directly without wrapper
 	die "no orderid specified" unless ($orderid);
 	die "no ack type specified" unless ($type);
 	die "no ack action specified" unless ($action);
@@ -132,43 +132,43 @@ sub ackorder {
 	$self->fetch();
 }
 
-sub ackorder_new_accept {
+sub ack_order_new_accept {
 	my ($self, $orderid) = @_;
 	die "no orderid specified" unless ($orderid);
-	$self->ackorder($orderid, 'new', 'accept');
+	$self->ack_order($orderid, 'new', 'accept');
 }
 
-sub ackorder_new_reject {
+sub ack_order_new_reject {
 	my ($self, $orderid) = @_;
 	die "no orderid specified" unless ($orderid);
-	$self->ackorder($orderid, 'new', 'reject');
+	$self->ack_order($orderid, 'new', 'reject');
 }
 
-sub ackorder_update_accept {
+sub ack_order_update_accept {
 	my ($self, $orderid) = @_;
 	die "no orderid specified" unless ($orderid);
-	$self->ackorder($orderid, 'update', 'accept');
+	$self->ack_order($orderid, 'update', 'accept');
 }
 
-sub ackorder_update_reject {
+sub ack_order_update_reject {
 	my ($self, $orderid) = @_;
 	die "no orderid specified" unless ($orderid);
-	$self->ackorder($orderid, 'update', 'reject');
+	$self->ack_order($orderid, 'update', 'reject');
 }
 
-sub ackorder_message_accept {
+sub ack_order_message_accept {
 	my ($self, $orderid) = @_;
 	die "no orderid specified" unless ($orderid);
-	$self->ackorder($orderid, 'message', 'accept');
+	$self->ack_order($orderid, 'message', 'accept');
 }
 
-sub ackorder_message_reject {
+sub ack_order_message_reject {
 	my ($self, $orderid) = @_;
 	die "no orderid specified" unless ($orderid);
-	$self->ackorder($orderid, 'message', 'reject');
+	$self->ack_order($orderid, 'message', 'reject');
 }
 
-sub listupdatedorders {
+sub list_updated_orders {
 	my $self = shift;
 	my $hash = md5_hex($self->{'id'}, $self->{'secret'});
 	$self->{'url'}  = "$self->{'baseurl'}method=listupdatedorders";
@@ -176,7 +176,7 @@ sub listupdatedorders {
 	$self->fetch();
 }
 
-sub listordermessages {
+sub list_order_messages {
 	my $self = shift;
 	my $hash = md5_hex($self->{'id'}, $self->{'secret'});
 	$self->{'url'}  = "$self->{'baseurl'}method=listordermessages";
@@ -184,7 +184,7 @@ sub listordermessages {
 	$self->fetch();
 }
 
-sub addorderactivity {
+sub add_order_activity {
 	my ($self, $orderid, $activity) = @_;
 	die "no orderid specified" unless ($orderid);
 	die "no activity listed" unless ($activity);
@@ -197,7 +197,7 @@ sub addorderactivity {
 	$self->fetch();
 }
 
-sub getorder {
+sub get_order {
 	my ($self, $orderid) = @_;
 	die "no orderid specified" unless ($orderid);
 	my $hash = md5_hex($self->{'id'}, $orderid, $self->{'secret'});
@@ -296,51 +296,51 @@ into a hash reference using XML::Simple. This hash reference is
 then stored here. The ForceArray option is used for a few, select
 tags like <Orders>, which should be treated as a list.
 
-=item $zaz->listneworders()
+=item $zaz->list_new_orders()
 
 Requests ListNewOrders method from Zazzle. All requests currently
 die if the returned data fails validation.
 
-=item $zaz->getshippinglabel($orderid, $weight, $format)
+=item $zaz->get_shipping_label($orderid, $weight, $format)
 
 Request a shipping label with specified orderid and weight. Format
 must be one of: PDF, ZPL or PNG. PDF is used as the default, but a
 warning will be produced if an invalid string is specified.
 
-=item $zaz->ackorder_new_accept($orderid)
-$zaz->ackorder_update_accept($orderid)
-$zaz->ackorder_message_accept($orderid)
+=item $zaz->ack_order_new_accept($orderid)
+$zaz->ack_order_update_accept($orderid)
+$zaz->ack_order_message_accept($orderid)
 
 Acknowledge receipt of new orders, updates and messages from Zazzle.
 
-=item $zaz->ackorder_new_reject($orderid)
-$zaz->ackorder_update_reject($orderid)
-$zaz->ackorder_message_reject($orderid)
+=item $zaz->ack_order_new_reject($orderid)
+$zaz->ack_order_update_reject($orderid)
+$zaz->ack_order_message_reject($orderid)
 
 Zazzle documentation states that the 'reject' methods will
 probably never be used, but if there is such a need, here they are.
 
-=item $zaz->listupdatedorders()
+=item $zaz->list_updated_orders()
 
 Return updated order information from Zazzle customer support. This
 should be called regularly, and before labels are printed for shipment.
-Use ackorder_update_accept() or ackorder_update_reject() to answer
+Use ack_order_update_accept() or ack_order_update_reject() to answer
 these updates.
 
-=item $zaz->listordermessages()
+=item $zaz->list_order_messages()
 
 Fetch outstanding messages. Zazzle says these messages are rarely used,
 but this is how their customer support delivers handling instructions.
 This should probably be checked whenever listupdateorders() is called.
-Use ackorder_messages_accept() or ackorder_messages_reject() to answer
+Use ack_order_messages_accept() or ack_order_messages_reject() to answer
 these updates.
 
-=item $zaz->addorderactivity($orderid, $activity)
+=item $zaz->add_order_activity($orderid, $activity)
 
 Submit a message to Zazzle concerning this order. This message will be
 available to their customer support staff when they lookup an order.
 
-=item $zaz=>getorder($orderid)
+=item $zaz=>get_order($orderid)
 
 Fetch order data for the specified orderID.
 
