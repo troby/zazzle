@@ -26,8 +26,6 @@ sub new {
 	    'id'      => $id,
 	    'secret'  => $key,
 	    'curl'    => $curl . q( -k -H 'Content-Type: text/xml'),
-	    'data'    => [],
-	    'href'    => {},
 	};
 	bless $session, $package;
 	return $session;
@@ -39,34 +37,29 @@ sub fetch {
 	    # this typically happens because fetch was called directly
 	    die q($self->{'url'} undefined);
 	}
-	$self->{'data'} = [];
-	$self->{'href'} = {};
 	my $pid = open2(\*READ,
 	    undef,
 	    "$self->{'curl'} '$self->{'url'}' 2>/dev/null");
 	my @resp = <READ>;
 	close READ;
 	waitpid($pid, 0);
-	$self->{'data'} = \@resp;
-	$self->xmltoh();
-	unless ($self->validate()) {
-	    warn q(ERROR: dumping contents of $self->{'data'});
+	unless ($self->validate(\@resp)) {
+	    warn q(ERROR: dumping response:);
 	    warn q($self->{'url'}: ) . $self->{'url'};
-	    use Data::Dumper;
-	    print Dumper($self->{'data'});
+	    print "@resp";
 	    die "invalid data";
 	}
 	$self->{'url'} = undef;
+	return $self->xmltoh(\@resp);
 }
 
 sub validate {
-	my $self = shift;
-	my @ary = @{$self->{'data'}};
+	my ($self, $ary) = @_;
 	# fail right away if this list is empty
-	return 0 if ($#ary == -1);
+	return 0 if ($#$ary == -1);
 	my $test = 0;
 	# returned data should contain SUCCESS code
-	foreach (@ary) {
+	foreach (@$ary) {
 	    if ($_ =~ m:<Code>SUCCESS</Code>:) {
 		$test = 1;
 		last;
@@ -76,7 +69,7 @@ sub validate {
 	return 0 if ($test == 0);
 	$test = 0;
 	# returned data should end with closing Response tag
-	if ($ary[-1] =~ m:</Response>$:) {
+	if ($ary->[-1] =~ m:</Response>$:) {
 	    $test = 1;
 	}
 	return $test;
@@ -87,7 +80,7 @@ sub list_new_orders {
         my $hash = md5_hex($self->{'id'}, $self->{'secret'});
 	$self->{'url'}  = "$self->{'baseurl'}method=listneworders";
 	$self->{'url'} .= "\&vendorid=$self->{'id'}\&hash=$hash";
-	$self->fetch();
+	return $self->fetch();
 }
 
 sub get_shipping_label {
@@ -107,7 +100,7 @@ sub get_shipping_label {
 	$self->{'url'} .= "\&vendorid=$self->{'id'}\&orderid=$orderid";
 	$self->{'url'} .= "\&weight=$weight\&format=$format";
 	$self->{'url'} .= "\&hash=$hash";
-	$self->fetch();
+	return $self->fetch();
 }
 
 sub ack_order {
@@ -129,7 +122,7 @@ sub ack_order {
 	$self->{'url'}  = "$self->{'baseurl'}method=ackorder";
 	$self->{'url'} .= "\&vendorid=$self->{'id'}\&orderid=$orderid";
 	$self->{'url'} .= "\&type=$type\&action=$action\&hash=$hash";
-	$self->fetch();
+	return $self->fetch();
 }
 
 sub ack_order_new_accept {
@@ -173,7 +166,7 @@ sub list_updated_orders {
 	my $hash = md5_hex($self->{'id'}, $self->{'secret'});
 	$self->{'url'}  = "$self->{'baseurl'}method=listupdatedorders";
 	$self->{'url'} .= "\&vendorid=$self->{'id'}\&hash=$hash";
-	$self->fetch();
+	return $self->fetch();
 }
 
 sub list_order_messages {
@@ -181,7 +174,7 @@ sub list_order_messages {
 	my $hash = md5_hex($self->{'id'}, $self->{'secret'});
 	$self->{'url'}  = "$self->{'baseurl'}method=listordermessages";
 	$self->{'url'} .= "\&vendorid=$self->{'id'}\&hash=$hash";
-	$self->fetch();
+	return $self->fetch();
 }
 
 sub add_order_activity {
@@ -194,7 +187,7 @@ sub add_order_activity {
 	$self->{'url'}  = "$self->{'baseurl'}method=addorderactivity";
 	$self->{'url'} .= "\&vendorid=$self->{'id'}\&orderid=$orderid";
 	$self->{'url'} .= "\&activity=$uri_msg\&hash=$hash";
-	$self->fetch();
+	return $self->fetch();
 }
 
 sub get_order {
@@ -204,13 +197,13 @@ sub get_order {
 	$self->{'url'}  = "$self->{'baseurl'}method=getorder";
 	$self->{'url'} .= "\&vendorid=$self->{'id'}\&orderid=$orderid";
 	$self->{'url'} .= "\&hash=$hash";
-	$self->fetch();
+	return $self->fetch();
 }
 
 sub xmltoh {
-	# parse xml data to hash ref and store in href element
-	my $self = shift;
-	$self->{'href'} = xml_in(join('', @{$self->{'data'}}),
+	# parse xml data to hash ref and return to fetch subroutine
+	my ($self, $data) = @_;
+	return xml_in(join('', @$data),
 	    SuppressEmpty => undef,
 	    ForceArray => ['Order', 'LineItem', 'Product', 'Message',
 		'ShippingDocument', 'PrintFile', 'PreviewFile'],
@@ -268,6 +261,12 @@ Zazzle REST API Order Integration
 
 =head1 SYNOPSIS
 
+Except for new(), these methods all return a hash reference of nested
+data created by XML::Simple. The ForceArray option is used for a few,
+select tags like <Orders>, which should be treated as a list. Most
+likely, these tags are also modified by GroupTags to pass them up to
+the parent level.
+
 =over 4
 
 =item use WebServices::Zazzle
@@ -275,26 +274,6 @@ Zazzle REST API Order Integration
 =item my $zaz = WebServices::Zazzle->new($id, $key)
 
 Initialize new object with VendorID, and Secret Key.
-
-=item $zaz->{'data'}
-
-This element will always contain an array reference, or it will
-be undefined. When new() is called, this object is undefined.
-It will be subsequently undefined each time before a REST call is
-made to Zazzle. Whatever xml data is returned by the Zazzle API
-will be stored in this object. It will not be cleared again until
-another call is made. You may inspect this element for debugging,
-and order data retrieval concerning all methods documented below.
-
-Commonly, you will reference this element as: @{$zaz->{'data'}}
-where you can then parse the xml data within line by line.
-
-=item $zaz->{'href'}
-
-When xml data returned from Zazzle is stored, it is also parsed
-into a hash reference using XML::Simple. This hash reference is
-then stored here. The ForceArray option is used for a few, select
-tags like <Orders>, which should be treated as a list.
 
 =item $zaz->list_new_orders()
 
