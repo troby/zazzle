@@ -3,29 +3,21 @@ use warnings;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = '1.42';
+$VERSION = '1.49';
 
 # dependencies
 use Digest::MD5 qw(md5_hex);
-use IPC::Open2 qw(open2);
+use LWP::UserAgent;
 use URI::Escape qw(uri_escape);
 use XML::Simple qw(xml_in);
-use File::Which;
 
 sub new {
 	my ($package, $id, $key) = @_;
-	my $curl = which('curl');
-	unless ($curl) {
-	    print "cURL not found. Please install:\n";
-	    print "http://curl.haxx.se/download.html\n";
-	    die;
-	}
 	my $session = {
 	    'baseurl' => 'https://vendor.zazzle.com/v100/api.aspx?',
 	    'url'     => undef,
 	    'id'      => $id,
 	    'secret'  => $key,
-	    'curl'    => $curl . q( -k -H 'Content-Type: text/xml'),
 	};
 	bless $session, $package;
 	return $session;
@@ -37,40 +29,29 @@ sub fetch {
 	    # this typically happens because fetch was called directly
 	    die q($self->{'url'} undefined);
 	}
-	my $pid = open2(\*READ,
-	    undef,
-	    "$self->{'curl'} '$self->{'url'}' 2>/dev/null");
-	my @resp = <READ>;
-	close READ;
-	waitpid($pid, 0);
-	unless ($self->validate(\@resp)) {
-	    warn q(ERROR: dumping response:);
-	    warn q($self->{'url'}: ) . $self->{'url'};
-	    print "@resp";
+	my $ua = LWP::UserAgent->new();
+	$ua->protocols_allowed(['https']);
+	my $response = $ua->get($self->{'url'});
+	my $h = $response->{'_headers'};
+	if ($h->header('client-warning')) {
+	    die "$response->{'_msg'}";
+	}
+	unless (_validate($response->{'_content'})) {
 	    die "invalid data";
 	}
 	$self->{'url'} = undef;
-	return $self->xmltoh(\@resp);
+	return _xmltoh($response);
 }
 
-sub validate {
-	my ($self, $ary) = @_;
-	# fail right away if this list is empty
-	return 0 if ($#$ary == -1);
+sub _validate {
+	my $data = shift;
 	my $test = 0;
+	# fail right away if undefined
+	return $test unless ($data);
 	# returned data should contain SUCCESS code
-	foreach (@$ary) {
-	    if ($_ =~ m:<Code>SUCCESS</Code>:) {
+	if ($data =~ m:<Code>SUCCESS</Code>: &&
+	    $data =~ m:</Response>$:) {
 		$test = 1;
-		last;
-	    }
-	}
-	# no need for second test if first failed
-	return 0 if ($test == 0);
-	$test = 0;
-	# returned data should end with closing Response tag
-	if ($ary->[-1] =~ m:</Response>$:) {
-	    $test = 1;
 	}
 	return $test;
 }
@@ -200,10 +181,10 @@ sub get_order {
 	return $self->fetch();
 }
 
-sub xmltoh {
-	# parse xml data to hash ref and return to fetch subroutine
-	my ($self, $data) = @_;
-	return xml_in(join('', @$data),
+sub _xmltoh {
+	# parse xml content to hash ref and return
+	my $response = shift;
+	return xml_in($response->{'_content'},
 	    SuppressEmpty => undef,
 	    ForceArray => ['Order', 'LineItem', 'Product', 'Message',
 		'ShippingDocument', 'PrintFile', 'PreviewFile'],
@@ -261,11 +242,9 @@ Zazzle REST API Order Integration
 
 =head1 SYNOPSIS
 
-Except for new(), these methods all return a hash reference of nested
-data created by XML::Simple. The ForceArray option is used for a few,
-select tags like <Orders>, which should be treated as a list. Most
-likely, these tags are also modified by GroupTags to pass them up to
-the parent level.
+All methods except for new() return a hash reference formatted by XML::Simple.
+Nested elements are converted by ForceArray, and probably use GroupTags as well
+to eliminate extraneous layers of indirection.
 
 =over 4
 

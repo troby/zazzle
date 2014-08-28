@@ -1,4 +1,17 @@
 ----------------------------
+revision 1.49
+Date:	Thu Aug 28 10:30:00 2014 -0700
+	Strip external binary dependency.
+	Use LWP::UserAgent instead of system curl with Open2.
+----------------------------
+revision 1.42
+Date:   Thu Aug 21 13:02:36 2014 -0700
+	Add more xml tags to special handling for XML::Simple.
+Date:   Fri Aug 22 00:45:34 2014 -0700
+	Finish snakifying methods.
+Date:   Sun Aug 24 10:49:32 2014 -0700
+	Drop 'data' and 'href' elements from parent object.
+----------------------------
 revision 1.40
 date: 2014/08/14 18:08:23;  author: ted;  state: Exp;
 Major revamp of Zazzle:
