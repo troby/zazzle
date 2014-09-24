@@ -187,11 +187,10 @@ sub _xmltoh {
 	return xml_in($response->{'_content'},
 	    SuppressEmpty => undef,
 	    ForceArray => ['Order', 'LineItem', 'Product', 'Message',
-		'ShippingDocument', 'PrintFile', 'PreviewFile'],
-	    GroupTags => {'Products' => 'Product', 'Orders' => 'Order',
-		'LineItems' => 'LineItem', 'Result' => 'Orders',
-		'Messages' => 'Message', 'PackingSheet' => 'Page',
-		'ShippingDocuments' => 'ShippingDocument',
+		'ShippingDocument', 'PrintFile', 'PreviewFile', 'Page'],
+	    GroupTags => {'Products' => 'Product', 'PackingSheet' => 'Page',
+		 'Orders' => 'Order', 'LineItems' => 'LineItem', 'Result' => 'Orders',
+		'Messages' => 'Message', 'ShippingDocuments' => 'ShippingDocument',
 		'PrintFiles' => 'PrintFile', 'Previews' => 'PreviewFile'});
 }
 
