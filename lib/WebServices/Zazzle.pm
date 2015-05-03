@@ -11,6 +11,18 @@ use LWP::UserAgent;
 use URI::Escape qw(uri_escape);
 use XML::Simple qw(xml_in);
 
+my $DEBUG = 0;
+#$DEBUG = 1;
+
+sub show {
+	my $desc = shift;
+	my $input = shift;
+	use Data::Dumper;
+	print "$desc:\n";
+	print Dumper($input);
+	print "\n";
+}
+
 sub new {
 	my ($package, $id, $key) = @_;
 	my $session = {
@@ -31,7 +43,9 @@ sub fetch {
 	}
 	my $ua = LWP::UserAgent->new();
 	$ua->protocols_allowed(['https']);
-	my $response = $ua->get($self->{'url'});
+	show('User Agent', $ua) if $DEBUG;
+	my $response = _sanitize($ua->get($self->{'url'}));
+	show('raw response', $response) if $DEBUG;
 	my $h = $response->{'_headers'};
 	if ($h->header('client-warning')) {
 	    die "$response->{'_msg'}";
@@ -43,11 +57,28 @@ sub fetch {
 	return _xmltoh($response);
 }
 
+sub _sanitize {
+	# remove all wide characters in content
+	my $response = shift;
+	$response->{'_content'} =~ s:[^\x00-\x7f]::g;
+	return $response;
+}
+
 sub _validate {
 	my $data = shift;
 	my $test = 0;
 	# fail right away if undefined
-	return $test unless ($data);
+	die "no content found in response" unless ($data);
+	# if ERROR code is found in response
+	if ($data =~ m:<Code>ERROR</Code>:) {
+	    my $err_string = '';
+	    my @lines = split('\n', $data);
+	    foreach my $ln (@lines) {
+		if ($ln =~ m:<Info>([^<]*)</Info>:) {
+		    die "$1";
+		}
+	    }
+	}
 	# returned data should contain SUCCESS code
 	if ($data =~ m:<Code>SUCCESS</Code>: &&
 	    $data =~ m:</Response>$:) {
