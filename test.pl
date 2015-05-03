@@ -21,7 +21,7 @@ if ($test_sum eq $good_sum) {
 my $plain = 'string with symbols: !@#$%^&*()_-+=';
 my $coded = 'string%20with%20symbols%3A%20%21%40';
 $coded   .= '%23%24%25%5E%26%2A%28%29_-%2B%3D';
-if (uri_escape($plain) eq $coded) {
+if (uri_escape($plain, "^A-Za-z0-9\-\._~") eq $coded) {
 	print "ok 3\n";
 } else {
 	print "fail 3\n";
